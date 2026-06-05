@@ -4,19 +4,9 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  // OBRIGATÓRIO: Substitua pelo nome exato do seu repositório no GitHub
+  // Roteamento obrigatório para o GitHub Pages
   base: '/JB-STORE/', 
   
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      // ... (mantenha o resto da sua configuração do PWA)
-    })
-  ]
-})
-
-export default defineConfig({
   plugins: [
     react(),
     VitePWA({
@@ -24,11 +14,11 @@ export default defineConfig({
       manifest: {
         name: 'Dashboard Clientes',
         short_name: 'Clientes',
-        theme_color: '#0a0a0a', // Fundo preto da interface
+        theme_color: '#0a0a0a', 
         background_color: '#0a0a0a',
         display: 'standalone',
         icons: [
-          // Adicionar seus ícones de 192x192 e 512x512 aqui
+          // Espaço reservado para os ícones futuros
         ]
       }
     })
