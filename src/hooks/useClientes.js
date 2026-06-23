@@ -1,30 +1,43 @@
 // src/hooks/useClientes.js
-import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from '../services/firebaseConfig';
+import { useEffect, useState } from "react";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { useAuth } from "./useAuth";
+import { db } from "../services/firebaseConfig";
 
 export function useClientes() {
-    const [clientes, setClientes] = useState([]);
-    const [loadingClientes, setLoading] = useState(true);
+  const { usuario } = useAuth();
+  const usuarioId = usuario?.uid;
+  const [clientes, setClientes] = useState([]);
+  const [loadingClientes, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Busca os clientes ordenados pela data de cadastro (mais recentes primeiro)
-        const q = query(collection(db, 'clientes'), orderBy('dataCadastro', 'desc'));
-        
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const lista = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setClientes(lista);
-            setLoading(false);
-        }, (error) => {
-            console.error("Erro ao buscar clientes: ", error);
-            setLoading(false);
+  useEffect(() => {
+    if (!usuarioId) {
+      return undefined;
+    }
+
+    const q = query(collection(db, "clientes"), where("usuarioId", "==", usuarioId));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const lista = snapshot.docs
+        .map((documento) => ({
+          id: documento.id,
+          ...documento.data(),
+        }))
+        .sort((clienteA, clienteB) => {
+          const dataA = new Date(clienteA.dataCadastro || 0).getTime();
+          const dataB = new Date(clienteB.dataCadastro || 0).getTime();
+          return dataB - dataA;
         });
 
-        return () => unsubscribe();
-    }, []);
+      setClientes(lista);
+      setLoading(false);
+    }, (error) => {
+      console.error("Erro ao buscar clientes: ", error);
+      setLoading(false);
+    });
 
-    return { clientes, loadingClientes };
+    return () => unsubscribe();
+  }, [usuarioId]);
+
+  return { clientes, loadingClientes };
 }

@@ -7,65 +7,115 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 
 const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
 
-function gerarInsightsEstrategicos(estatisticas) {
-  if (!estatisticas || estatisticas.totalClientes === 0) return ["Aguardando dados suficientes para análise."];
+function montarCategorias(estatisticas, categorias = []) {
+  const nomesConfigurados = categorias.map((categoria) => (
+    typeof categoria === "string" ? categoria : categoria?.nome
+  ));
 
-  const categorias = ["Instagram", "WhatsApp", "Boca a Boca", "Passagem"];
-  
-  let maxVolCanal = ''; let maxVol = 0;
-  let maxRevCanal = ''; let maxRev = 0;
-  let maxTicketCanal = ''; let maxTicket = 0;
+  return Array.from(new Set([
+    ...nomesConfigurados,
+    ...Object.keys(estatisticas?.origens || {}),
+    ...Object.keys(estatisticas?.faturamentoPorOrigem || {}),
+  ].filter(Boolean)));
+}
 
-  categorias.forEach(canal => {
+function gerarInsightsEstrategicos(estatisticas, categoriasGrafico) {
+  if (!estatisticas || estatisticas.totalClientes === 0) {
+    return ["Aguardando dados suficientes para analise."];
+  }
+
+  if (categoriasGrafico.length === 0) {
+    return ["Nenhuma origem de venda encontrada para analise."];
+  }
+
+  let maxVolCanal = "";
+  let maxVol = 0;
+  let maxRevCanal = "";
+  let maxRev = 0;
+  let maxTicketCanal = "";
+  let maxTicket = 0;
+
+  categoriasGrafico.forEach((canal) => {
     const vol = estatisticas.origens?.[canal] || 0;
     const rev = estatisticas.faturamentoPorOrigem?.[canal] || 0;
     const ticket = vol > 0 ? rev / vol : 0;
 
-    if (vol > maxVol) { maxVol = vol; maxVolCanal = canal; }
-    if (rev > maxRev) { maxRev = rev; maxRevCanal = canal; }
-    if (ticket > maxTicket) { maxTicket = ticket; maxTicketCanal = canal; }
+    if (vol > maxVol) {
+      maxVol = vol;
+      maxVolCanal = canal;
+    }
+
+    if (rev > maxRev) {
+      maxRev = rev;
+      maxRevCanal = canal;
+    }
+
+    if (ticket > maxTicket) {
+      maxTicket = ticket;
+      maxTicketCanal = canal;
+    }
   });
 
-  if (maxVol === 0) return ["Nenhum dado válido para análise."];
+  if (maxVol === 0) {
+    return ["Nenhum dado valido para analise."];
+  }
 
   const insights = [];
+
   if (maxVolCanal === maxRevCanal) {
-    insights.push(`Dominância: O ${maxVolCanal} é o motor principal, liderando em atração (${maxVol}) e faturamento (${formatarMoeda(maxRev)}).`);
+    insights.push(`Dominancia: ${maxVolCanal} lidera em atracao (${maxVol}) e faturamento (${formatarMoeda(maxRev)}).`);
   } else {
-    insights.push(`Descolamento: Você atrai mais cabeças pelo ${maxVolCanal} (${maxVol}), mas a maior receita vem do ${maxRevCanal} (${formatarMoeda(maxRev)}).`);
+    insights.push(`Descolamento: voce atrai mais clientes por ${maxVolCanal} (${maxVol}), mas a maior receita vem de ${maxRevCanal} (${formatarMoeda(maxRev)}).`);
   }
 
   if (maxTicketCanal && maxTicket > 0) {
-    insights.push(`Alto Padrão: Os clientes de ${maxTicketCanal} são os mais valiosos (Ticket Médio: ${formatarMoeda(maxTicket)}).`);
+    insights.push(`Alto padrao: clientes de ${maxTicketCanal} tem o maior ticket medio (${formatarMoeda(maxTicket)}).`);
   }
 
   return insights;
 }
 
-export function DashboardCards({ estatisticas }) {
-  const categoriasFixas = ["Instagram", "WhatsApp", "Boca a Boca", "Passagem"];
-  
-  const valoresClientes = categoriasFixas.map(cat => estatisticas.origens?.[cat] || 0);
-  const valoresFaturamento = categoriasFixas.map(cat => estatisticas.faturamentoPorOrigem?.[cat] || 0);
-  
-  const backgroundColors = ['#D4AF37', '#B8860B', '#FFD700', '#DAA520'];
-  const totalClientesFormatado = estatisticas.totalClientes > 0 ? estatisticas.totalClientes : 1;
+export function DashboardCards({
+  estatisticas,
+  categorias = [],
+  titulo,
+  descricao,
+  exibirInsights = true,
+}) {
+  const dados = estatisticas || {
+    totalClientes: 0,
+    faturamentoTotal: 0,
+    origens: {},
+    faturamentoPorOrigem: {},
+  };
+
+  const categoriasGrafico = montarCategorias(dados, categorias);
+  const valoresClientes = categoriasGrafico.map((cat) => dados.origens?.[cat] || 0);
+  const valoresFaturamento = categoriasGrafico.map((cat) => dados.faturamentoPorOrigem?.[cat] || 0);
+  const palette = ['#D4AF37', '#B8860B', '#FFD700', '#DAA520', '#70d670', '#4CAF50', '#80cbc4', '#90caf9'];
+  const backgroundColors = categoriasGrafico.map((_, index) => palette[index % palette.length]);
+  const totalClientesFormatado = dados.totalClientes > 0 ? dados.totalClientes : 1;
 
   const dataClientes = {
-    labels: categoriasFixas,
+    labels: categoriasGrafico,
     datasets: [{ data: valoresClientes, backgroundColor: backgroundColors, borderColor: '#121212', borderWidth: 2 }]
   };
 
   const dataFaturamento = {
-    labels: categoriasFixas,
+    labels: categoriasGrafico,
     datasets: [{ data: valoresFaturamento, backgroundColor: backgroundColors, borderColor: '#121212', borderWidth: 2 }]
   };
 
   const pieOptions = {
-    plugins: { 
-      legend: { labels: { color: '#a0a0a0' } }, tooltip: { enabled: false },
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#a0a0a0' } },
+      tooltip: { enabled: false },
       datalabels: {
-        color: '#000', font: { weight: 'bold', size: 12 }, textAlign: 'center',
+        color: '#000',
+        font: { weight: 'bold', size: 12 },
+        textAlign: 'center',
         formatter: (valor) => valor === 0 ? null : `${valor}\n(${((valor / totalClientesFormatado) * 100).toFixed(1)}%)`
       }
     }
@@ -73,57 +123,78 @@ export function DashboardCards({ estatisticas }) {
 
   const barFaturamentoOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     layout: { padding: { top: 35 } },
     scales: {
       y: { ticks: { color: '#a0a0a0', callback: (value) => formatarMoeda(value) }, grid: { color: '#2a2a2a' }, beginAtZero: true },
       x: { ticks: { color: '#a0a0a0' }, grid: { display: false } }
     },
-    plugins: { 
-      legend: { display: false }, tooltip: { enabled: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false },
       datalabels: {
-        color: 'var(--gold-primary)', font: { weight: 'bold', size: 12 }, align: 'top', anchor: 'end',
+        color: 'var(--gold-primary)',
+        font: { weight: 'bold', size: 12 },
+        align: 'top',
+        anchor: 'end',
         formatter: (valor) => valor === 0 ? null : formatarMoeda(valor)
       }
     }
   };
 
-  const insightsGerados = gerarInsightsEstrategicos(estatisticas);
+  const insightsGerados = gerarInsightsEstrategicos(dados, categoriasGrafico);
 
   return (
-    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
-      {/* Classe CSS assumiu o controlo aqui */}
-      <div className="grid-responsivo" style={{ textAlign: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+    <div className="panel dashboard-card-panel">
+      {(titulo || descricao) && (
+        <div className="section-heading dashboard-card-heading">
+          <div>
+            {titulo && <h2>{titulo}</h2>}
+            {descricao && <p className="muted-text">{descricao}</p>}
+          </div>
+        </div>
+      )}
+
+      <div className="grid-responsivo dashboard-total-row">
         <div>
           <h3 style={{ color: 'var(--text-secondary)' }}>Total de Clientes</h3>
-          <h1 className="texto-destaque" style={{ color: 'var(--gold-primary)' }}>{estatisticas.totalClientes || 0}</h1>
+          <h1 className="texto-destaque" style={{ color: 'var(--gold-primary)' }}>{dados.totalClientes || 0}</h1>
         </div>
         <div>
           <h3 style={{ color: 'var(--text-secondary)' }}>Faturamento Geral</h3>
-          <h1 className="texto-destaque" style={{ color: '#4CAF50' }}>{formatarMoeda(estatisticas.faturamentoTotal)}</h1>
+          <h1 className="texto-destaque" style={{ color: '#4CAF50' }}>{formatarMoeda(dados.faturamentoTotal)}</h1>
         </div>
       </div>
 
-      {/* Classe CSS assumiu o controlo dos gráficos */}
-      <div className="grid-responsivo">
-        <div>
-          <h4 style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '16px' }}>Volume (Pizza)</h4>
-          <Pie data={dataClientes} options={pieOptions} />
+      {categoriasGrafico.length === 0 ? (
+        <p className="muted-text">Nenhuma origem de venda cadastrada ainda.</p>
+      ) : (
+        <div className="grid-responsivo chart-grid">
+          <div className="chart-card">
+            <h4>Volume (Pizza)</h4>
+            <div className="chart-frame pie-frame">
+              <Pie data={dataClientes} options={pieOptions} />
+            </div>
+          </div>
+          <div className="chart-card">
+            <h4>Receita (Barras)</h4>
+            <div className="chart-frame">
+              <Bar data={dataFaturamento} options={barFaturamentoOptions} />
+            </div>
+          </div>
         </div>
-        <div>
-          <h4 style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '16px' }}>Receita (Barras)</h4>
-          <Bar data={dataFaturamento} options={barFaturamentoOptions} />
-        </div>
-      </div>
+      )}
 
-      <div style={{ marginTop: '16px', padding: '16px', background: '#1a1a1a', borderRadius: '8px', borderLeft: '4px solid var(--gold-primary)' }}>
-        <h4 style={{ color: 'var(--gold-primary)', marginBottom: '8px', textTransform: 'uppercase', fontSize: '14px' }}>Resumo Estratégico</h4>
-        <ul style={{ listStyleType: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {insightsGerados.map((insight, index) => (
-            <li key={index} style={{ color: '#e0e0e0', fontSize: '14px', lineHeight: '1.5' }}>• {insight}</li>
-          ))}
-        </ul>
-      </div>
+      {exibirInsights && (
+        <div className="insights-box">
+          <h4>Resumo Estrategico</h4>
+          <ul>
+            {insightsGerados.map((insight, index) => (
+              <li key={index}>{insight}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

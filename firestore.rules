@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function isActiveAdmin() {
+      return isSignedIn()
+        && userProfile().data.ativo == true
+        && userProfile().data.tipo == "admin";
+    }
+
+    match /usuarios/{userId} {
+      allow read: if isActiveAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow create, update, delete: if isActiveAdmin();
+    }
+
+    match /clientes/{clienteId} {
+      allow read: if isActiveAdmin()
+        || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
+      allow create: if isActiveAdmin()
+        || (isSignedIn() && request.resource.data.usuarioId == request.auth.uid);
+      allow update, delete: if isActiveAdmin()
+        || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
+    }
+
+    match /origensVenda/{origemId} {
+      allow read: if isSignedIn();
+      allow write: if isActiveAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if isActiveAdmin();
+    }
+  }
+}

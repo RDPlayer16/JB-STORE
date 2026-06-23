@@ -1,46 +1,47 @@
-// src/App.jsx
-import { FormCadastro } from './components/FormCadastro';
-import { DashboardCards } from './components/DashboardCards';
-import { ListaClientes } from './components/ListaClientes';
-import { useEstatisticas } from './hooks/useEstatisticas';
-import { cadastrarClienteFirestore } from './services/funcoesDB';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import Login from "./auth/Login";
+import AdminRoute from "./guards/AdminRoute";
+import PrivateRoute from "./guards/PrivateRoute";
+import AdminDashboard from "./Pages/AdminDashboard";
+import FuncionariosDashboard from "./Pages/FuncionariosDashboard";
+import UsuariosAdmin from "./Pages/UsuariosAdmin";
 
 export default function App() {
-  // O hook agora conecta-se diretamente ao Firestore. 
-  // O estado 'estatisticas' será atualizado automaticamente a cada alteração na nuvem.
-  const { estatisticas, loading } = useEstatisticas(); 
-
-  const lidarComCadastroReal = async (novoCliente) => {
-    try {
-      // Executa a transação no Firebase
-      await cadastrarClienteFirestore(novoCliente);
-      // Não é necessário atualizar o estado local (setEstatisticas). 
-      // O Firestore onSnapshot no hook fará isso reagir em milissegundos.
-    } catch (erro) {
-      alert("Erro ao registar cliente. Verifique a consola.");
-    }
-  };
-
-  if (loading) {
-    return (
-      <div style={{ color: 'var(--gold-primary)', textAlign: 'center', marginTop: '50px' }}>
-        A carregar dados do sistema...
-      </div>
-    );
-  }
-
-  // Prevenção de falha de renderização caso a base de dados retorne undefined
-  const dadosSeguros = estatisticas || { totalClientes: 0, origens: {} };
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div className="dashboard-container">
-        <FormCadastro onSubmitMock={lidarComCadastroReal} />
-        <DashboardCards estatisticas={dadosSeguros} />
-      </div>
-      
-      {/* Tabela de Clientes com a opção de exclusão */}
-      <ListaClientes />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/funcionario"
+          element={
+            <PrivateRoute>
+              <FuncionariosDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/usuarios"
+          element={
+            <AdminRoute>
+              <UsuariosAdmin />
+            </AdminRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

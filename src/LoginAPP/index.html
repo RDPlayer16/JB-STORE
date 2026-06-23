@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area de Login</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            font-family: Inter, system-ui, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            color: #c5b909;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        main {
+            width: min(520px, 100%);
+            background: rgba(0, 0, 0, 0.219);
+            border: 1px solid rgb(255, 255, 255);
+            border-radius: 28px;
+            box-shadow: 0 28px 70px rgb(61, 61, 61);
+            backdrop-filter: blur(18px);
+            padding: 36px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 22px;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .container-input {
+            display: grid;
+            gap: 8px;
+        }
+
+        label {
+            color: #cfd13e;
+            font-size: 0.95rem;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #d3c837;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        input:focus {
+            border-color: #050301c9;
+            box-shadow: 0 0 0 4px rgba(143, 182, 255, 0.14);
+            transform: translateY(-1px);
+        }
+
+        .password-status {
+            font-size: 0.85rem;
+            color: #ced123;
+            min-height: 18px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 999px;
+            padding: 14px 22px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        button[type="submit"] {
+            background: #423f3ec5;
+            color: #dee942;
+        }
+
+        button[type="reset"] {
+            background: rgba(255, 255, 255, 0.14);
+            color: #d5eb72;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button[type="reset"]:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        @media (max-width: 520px) {
+            main {
+                padding: 26px;
+                border-radius: 22px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Área de Login</h1>
+        <form id="meuFormulario">
+            <div class="container-input">
+                <label for="nome">Nome:</label>
+                <input id="nome" type="text" name="nome" placeholder="Digite o seu nome">
+            </div>
+    
+
+            <div class="container-input">
+                <label for="email">Email:</label>
+                <input type="email" name="email" placeholder="Digite o seu email">
+            </div>
+
+            <div class="container-input">
+                <label for="senha">Senha:</label>
+                <input id="senha" type="password" name="senha" placeholder="Digite a sua senha">
+                <span id="password-status" class="password-status"></span>
+            </div>
+
+            
+            <div class="actions">
+                <button type="submit">Enviar</button>
+                <button type="reset">Reset</button>
+            </div>
+        </form>
+    </main>
+
+    <script type="text/javascript" src="./script.js"></script>
+</body>
+</html>
