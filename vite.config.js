@@ -13,12 +13,16 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'Dashboard Clientes',
-        short_name: 'Clientes',
+        short_name: 'JBM',
         theme_color: '#0a0a0a', 
         background_color: '#0a0a0a',
         display: 'standalone',
         icons: [
-          // Espaço reservado para os ícones futuros
+          {
+            src: 'src/icons/maskable_icon.png',
+            sizes: '192x192',
+            type: 'image/png'
+          }
         ]
       }
     })
