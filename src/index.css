@@ -166,7 +166,7 @@ button {
   border-color: var(--gold-primary);
   box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
   transform: translateY(-1px);
-  background-color:#29220c
+  background-color: #29220c;
 }
 
 .primary-button,
