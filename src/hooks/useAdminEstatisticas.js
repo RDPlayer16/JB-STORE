@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../services/firebaseConfig";
+import { ehAdminGeral } from "../utils/perfis";
 
 const formatarOrigem = (origens) => {
   const entradas = Object.entries(origens);
@@ -51,7 +52,9 @@ function somarResultados(resultados) {
   });
 }
 
-export function useAdminEstatisticas() {
+export function useAdminEstatisticas(usuarioLogado) {
+  const usuarioId = usuarioLogado?.uid;
+  const adminGeral = ehAdminGeral(usuarioLogado);
   const [usuarios, setUsuarios] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(true);
@@ -59,7 +62,16 @@ export function useAdminEstatisticas() {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "usuarios"), (snapshot) => {
+    if (!usuarioId || adminGeral) {
+      return undefined;
+    }
+
+    const consultaUsuarios = query(
+      collection(db, "usuarios"),
+      where("adminDonoId", "==", usuarioId),
+    );
+
+    const unsubscribe = onSnapshot(consultaUsuarios, (snapshot) => {
       const lista = snapshot.docs.map((documento) => ({
         uid: documento.id,
         ...documento.data(),
@@ -74,10 +86,19 @@ export function useAdminEstatisticas() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [adminGeral, usuarioId]);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "clientes"), (snapshot) => {
+    if (!usuarioId || adminGeral) {
+      return undefined;
+    }
+
+    const consultaClientes = query(
+      collection(db, "clientes"),
+      where("adminDonoId", "==", usuarioId),
+    );
+
+    const unsubscribe = onSnapshot(consultaClientes, (snapshot) => {
       const lista = snapshot.docs.map((documento) => ({
         id: documento.id,
         ...documento.data(),
@@ -92,7 +113,7 @@ export function useAdminEstatisticas() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [adminGeral, usuarioId]);
 
   const estatisticas = useMemo(() => {
     const mapaUsuarios = new Map();

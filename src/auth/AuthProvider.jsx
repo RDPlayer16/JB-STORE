@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../hooks/useAuth";
 import { login as loginFirebase, logout as logoutFirebase, observarAuth } from "../services/authService";
-import { buscarPerfilUsuario } from "../services/userService";
+import { buscarPerfilUsuario, observarPerfilUsuario } from "../services/userService";
 
 function criarMensagemPerfil(perfil) {
   if (!perfil) {
@@ -41,9 +41,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    let unsubscribePerfil = null;
+
     const unsubscribe = observarAuth(async (user) => {
       setLoading(true);
       setFirebaseUser(user);
+
+      if (unsubscribePerfil) {
+        unsubscribePerfil();
+        unsubscribePerfil = null;
+      }
 
       if (!user) {
         setUsuario(null);
@@ -53,21 +60,40 @@ export function AuthProvider({ children }) {
 
       setErroPerfil("");
 
-      try {
-        const perfil = await carregarPerfil(user);
-        setUsuario(perfil);
-      } catch (error) {
-        console.error("Erro ao carregar perfil do usuario:", error);
-        setUsuario(null);
-        setErroPerfil(error.message);
-        await logoutFirebase();
-      } finally {
+      unsubscribePerfil = observarPerfilUsuario(user.uid, async (perfil) => {
+        const mensagemPerfil = criarMensagemPerfil(perfil);
+
+        if (mensagemPerfil) {
+          setUsuario(null);
+          setErroPerfil(mensagemPerfil);
+          setLoading(false);
+          await logoutFirebase();
+          return;
+        }
+
+        setUsuario({
+          ...perfil,
+          uid: user.uid,
+          email: perfil.email || user.email,
+        });
         setLoading(false);
-      }
+      }, async (error) => {
+        console.error("Erro ao acompanhar perfil do usuario:", error);
+        setUsuario(null);
+        setErroPerfil("Nao foi possivel acompanhar o perfil do usuario.");
+        setLoading(false);
+        await logoutFirebase();
+      });
     });
 
-    return () => unsubscribe();
-  }, [carregarPerfil]);
+    return () => {
+      if (unsubscribePerfil) {
+        unsubscribePerfil();
+      }
+
+      unsubscribe();
+    };
+  }, []);
 
   const login = useCallback(async (email, senha) => {
     setLoading(true);

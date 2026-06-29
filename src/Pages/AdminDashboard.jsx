@@ -4,22 +4,60 @@ import { DashboardCards } from "../components/DashboardCards";
 import { useAdminEstatisticas } from "../hooks/useAdminEstatisticas";
 import { useAuth } from "../hooks/useAuth";
 import { useOrigensVenda } from "../hooks/useOrigensVenda";
+import { ehAdminGeral, formatarTipoUsuario } from "../utils/perfis";
 
 const formatarMoeda = (valor) => new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 }).format(valor || 0);
 
-function formatarTipo(tipo) {
-  if (tipo === "admin") return "Administrador";
-  if (tipo === "funcionario") return "Funcionario";
-  return tipo || "Sem tipo";
+function PainelAdminGeral({ usuario }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/", { replace: true });
+  };
+
+  return (
+    <main className="page-shell app-shell">
+      <header className="page-header">
+        <div>
+          <span className="eyebrow">Administrador geral</span>
+          <h1>Controle de assinaturas</h1>
+          <p>Ola, {usuario?.nome || usuario?.email}. Gerencie os administradores clientes.</p>
+        </div>
+
+        <div className="header-actions">
+          <Link className="primary-button button-link" to="/admin/usuarios">
+            Administradores
+          </Link>
+          <button type="button" className="secondary-button" onClick={handleLogout}>
+            Sair
+          </button>
+        </div>
+      </header>
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <h2>Clientes administradores</h2>
+            <p className="muted-text">Ative, pause ou crie acessos de administradores clientes.</p>
+          </div>
+          <Link className="secondary-button button-link" to="/admin/usuarios">
+            Abrir controle
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
 }
 
-export default function AdminDashboard() {
+function PainelAdminCliente({ usuario }) {
   const navigate = useNavigate();
-  const { logout, usuario } = useAuth();
-  const { erro, loading, porEquipe, resumoEquipe, resumoGeral } = useAdminEstatisticas();
+  const { logout } = useAuth();
+  const { erro, loading, porEquipe, resumoEquipe, resumoGeral } = useAdminEstatisticas(usuario);
   const { origensAtivas, loadingOrigens, erroOrigens } = useOrigensVenda();
   const [abaAtiva, setAbaAtiva] = useState("geral");
   const [usuarioSelecionadoId, setUsuarioSelecionadoId] = useState("");
@@ -68,7 +106,7 @@ export default function AdminDashboard() {
                     <strong>{resultado.nome}</strong>
                     <span className="table-subtext">{resultado.email}</span>
                   </td>
-                  <td data-label="Tipo">{formatarTipo(resultado.tipo)}</td>
+                  <td data-label="Tipo">{formatarTipoUsuario(resultado)}</td>
                   <td data-label="Status">{resultado.ativo ? "Ativo" : "Inativo"}</td>
                   <td data-label="Clientes">{resultado.totalClientes}</td>
                   <td data-label="Faturamento">{formatarMoeda(resultado.faturamentoTotal)}</td>
@@ -87,9 +125,9 @@ export default function AdminDashboard() {
     <main className="page-shell app-shell">
       <header className="page-header">
         <div>
-          <span className="eyebrow">Administrador</span>
+          <span className="eyebrow">Administrador cliente</span>
           <h1>Painel Administrativo</h1>
-          <p>Ola, {usuario?.nome || usuario?.email}. Escolha uma area para acompanhar ou configurar.</p>
+          <p>Ola, {usuario?.nome || usuario?.email}. Acompanhe sua equipe e configure acessos.</p>
         </div>
 
         <div className="header-actions">
@@ -198,7 +236,7 @@ export default function AdminDashboard() {
                     estatisticas={usuarioSelecionado}
                     categorias={origensAtivas}
                     titulo={usuarioSelecionado.nome}
-                    descricao={`${formatarTipo(usuarioSelecionado.tipo)} - ${usuarioSelecionado.ativo ? "Ativo" : "Inativo"} - ${usuarioSelecionado.email}`}
+                    descricao={`${formatarTipoUsuario(usuarioSelecionado)} - ${usuarioSelecionado.ativo ? "Ativo" : "Inativo"} - ${usuarioSelecionado.email}`}
                   />
                 )}
               </div>
@@ -210,9 +248,18 @@ export default function AdminDashboard() {
               {renderTabelaPerfis()}
             </section>
           )}
-
         </>
       )}
     </main>
   );
+}
+
+export default function AdminDashboard() {
+  const { usuario } = useAuth();
+
+  if (ehAdminGeral(usuario)) {
+    return <PainelAdminGeral usuario={usuario} />;
+  }
+
+  return <PainelAdminCliente usuario={usuario} />;
 }

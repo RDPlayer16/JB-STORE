@@ -8,6 +8,7 @@ export async function cadastrarClienteFirestore(dadosCliente, usuario) {
   }
 
   const valorVenda = parseFloat(dadosCliente.valorVenda) || 0;
+  const adminDonoId = usuario.adminDonoId || "";
 
   try {
     await addDoc(collection(db, "clientes"), {
@@ -16,6 +17,9 @@ export async function cadastrarClienteFirestore(dadosCliente, usuario) {
       usuarioId: usuario.uid,
       usuarioNome: usuario.nome || usuario.email,
       usuarioEmail: usuario.email,
+      adminDonoId,
+      adminDonoNome: usuario.adminDonoNome || "",
+      adminDonoEmail: usuario.adminDonoEmail || "",
       dataCadastro: new Date().toISOString(),
     });
 

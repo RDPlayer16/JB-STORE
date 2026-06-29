@@ -10,33 +10,86 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/usuarios/$(request.auth.uid));
     }
 
+    function isActiveUser() {
+      return isSignedIn() && userProfile().data.ativo == true;
+    }
+
     function isActiveAdmin() {
-      return isSignedIn()
-        && userProfile().data.ativo == true
-        && userProfile().data.tipo == "admin";
+      return isActiveUser() && userProfile().data.tipo == "admin";
+    }
+
+    function isGeneralAdmin() {
+      return isActiveAdmin()
+        && (
+          userProfile().data.adminGeral == true
+          || userProfile().data.criadoPorUid == null
+        );
+    }
+
+    function isClientAdmin() {
+      return isActiveAdmin() && !isGeneralAdmin();
+    }
+
+    function isOwnUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isOwnEmployeeResource() {
+      return resource.data.tipo == "funcionario"
+        && resource.data.adminDonoId == request.auth.uid;
+    }
+
+    function isClientAdminRequest() {
+      return request.resource.data.tipo == "admin"
+        && request.resource.data.adminGeral == false
+        && request.resource.data.criadoPorUid == request.auth.uid;
+    }
+
+    function isOwnEmployeeRequest() {
+      return request.resource.data.tipo == "funcionario"
+        && request.resource.data.adminDonoId == request.auth.uid
+        && request.resource.data.criadoPorUid == request.auth.uid;
     }
 
     match /usuarios/{userId} {
-      allow read: if isActiveAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow create, update, delete: if isActiveAdmin();
+      allow read: if isOwnUser(userId)
+        || isGeneralAdmin()
+        || (isClientAdmin() && isOwnEmployeeResource());
+
+      allow create: if (isGeneralAdmin() && isClientAdminRequest())
+        || (isClientAdmin() && isOwnEmployeeRequest());
+
+      allow update: if isGeneralAdmin()
+        || (
+          isClientAdmin()
+          && isOwnEmployeeResource()
+          && request.resource.data.tipo == "funcionario"
+          && request.resource.data.adminDonoId == resource.data.adminDonoId
+          && request.resource.data.criadoPorUid == resource.data.criadoPorUid
+        );
+
+      allow delete: if false;
     }
 
     match /clientes/{clienteId} {
-      allow read: if isActiveAdmin()
+      allow read: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
-      allow create: if isActiveAdmin()
-        || (isSignedIn() && request.resource.data.usuarioId == request.auth.uid);
-      allow update, delete: if isActiveAdmin()
+
+      allow create: if isActiveUser()
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.adminDonoId == userProfile().data.adminDonoId;
+
+      allow update, delete: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
     }
 
     match /origensVenda/{origemId} {
       allow read: if isSignedIn();
-      allow write: if isActiveAdmin();
+      allow write: if isClientAdmin();
     }
 
     match /{document=**} {
-      allow read, write: if isActiveAdmin();
+      allow read, write: if false;
     }
   }
 }
