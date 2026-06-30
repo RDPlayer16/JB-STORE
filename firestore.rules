@@ -39,16 +39,87 @@ service cloud.firestore {
         && resource.data.adminDonoId == request.auth.uid;
     }
 
+    function validText(value, maxSize) {
+      return value is string && value.size() > 0 && value.size() <= maxSize;
+    }
+
+    function validEmail(value) {
+      return value is string && value.size() >= 5 && value.size() <= 254;
+    }
+
+    function validStatusUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(["ativo", "atualizadoEm"])
+        && request.resource.data.ativo is bool
+        && request.resource.data.atualizadoEm == request.time;
+    }
+
     function isClientAdminRequest() {
-      return request.resource.data.tipo == "admin"
+      return request.resource.data.keys().hasOnly([
+          "nome", "email", "tipo", "ativo", "adminGeral",
+          "criadoPorUid", "criadoPorNome", "criadoPorEmail", "criadoEm"
+        ])
+        && validText(request.resource.data.nome, 120)
+        && validEmail(request.resource.data.email)
+        && request.resource.data.tipo == "admin"
+        && request.resource.data.ativo == true
         && request.resource.data.adminGeral == false
-        && request.resource.data.criadoPorUid == request.auth.uid;
+        && request.resource.data.criadoPorUid == request.auth.uid
+        && request.resource.data.criadoEm == request.time;
     }
 
     function isOwnEmployeeRequest() {
-      return request.resource.data.tipo == "funcionario"
+      return request.resource.data.keys().hasOnly([
+          "nome", "email", "tipo", "ativo", "criadoPorUid", "criadoPorNome",
+          "criadoPorEmail", "adminDonoId", "adminDonoNome", "adminDonoEmail", "criadoEm"
+        ])
+        && validText(request.resource.data.nome, 120)
+        && validEmail(request.resource.data.email)
+        && request.resource.data.tipo == "funcionario"
+        && request.resource.data.ativo == true
         && request.resource.data.adminDonoId == request.auth.uid
-        && request.resource.data.criadoPorUid == request.auth.uid;
+        && request.resource.data.criadoPorUid == request.auth.uid
+        && request.resource.data.criadoEm == request.time;
+    }
+
+    function validClienteCreate() {
+      return request.resource.data.keys().hasOnly([
+          "nome", "origem", "valorVenda", "usuarioId", "usuarioNome", "usuarioEmail",
+          "adminDonoId", "adminDonoNome", "adminDonoEmail", "dataCadastro"
+        ])
+        && validText(request.resource.data.nome, 120)
+        && validText(request.resource.data.origem, 80)
+        && request.resource.data.valorVenda is number
+        && request.resource.data.valorVenda >= 0
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.usuarioEmail == request.auth.token.email
+        && request.resource.data.adminDonoId == userProfile().data.adminDonoId
+        && request.resource.data.dataCadastro == request.time;
+    }
+
+    function validClienteUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(["nome", "origem", "valorVenda", "atualizadoEm"])
+        && validText(request.resource.data.nome, 120)
+        && validText(request.resource.data.origem, 80)
+        && request.resource.data.valorVenda is number
+        && request.resource.data.valorVenda >= 0;
+    }
+
+    function validOrigemCreate() {
+      return request.resource.data.keys().hasOnly(["nome", "nomeNormalizado", "ativo", "criadoEm"])
+        && validText(request.resource.data.nome, 80)
+        && validText(request.resource.data.nomeNormalizado, 80)
+        && request.resource.data.ativo == true
+        && request.resource.data.criadoEm == request.time;
+    }
+
+    function validOrigemUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(["nome", "nomeNormalizado", "ativo", "atualizadoEm"])
+        && validText(request.resource.data.nome, 80)
+        && validText(request.resource.data.nomeNormalizado, 80)
+        && request.resource.data.ativo is bool;
     }
 
     match /usuarios/{userId} {
@@ -59,13 +130,11 @@ service cloud.firestore {
       allow create: if (isGeneralAdmin() && isClientAdminRequest())
         || (isClientAdmin() && isOwnEmployeeRequest());
 
-      allow update: if isGeneralAdmin()
-        || (
-          isClientAdmin()
-          && isOwnEmployeeResource()
-          && request.resource.data.tipo == "funcionario"
-          && request.resource.data.adminDonoId == resource.data.adminDonoId
-          && request.resource.data.criadoPorUid == resource.data.criadoPorUid
+      allow update: if !isOwnUser(userId)
+        && validStatusUpdate()
+        && (
+          (isGeneralAdmin() && resource.data.adminGeral != true)
+          || (isClientAdmin() && isOwnEmployeeResource())
         );
 
       allow delete: if false;
@@ -75,17 +144,23 @@ service cloud.firestore {
       allow read: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
 
-      allow create: if isActiveUser()
-        && request.resource.data.usuarioId == request.auth.uid
-        && request.resource.data.adminDonoId == userProfile().data.adminDonoId;
+      allow create: if isActiveUser() && validClienteCreate();
 
-      allow update, delete: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
+      allow update: if validClienteUpdate()
+        && (
+          (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
+          || (isSignedIn() && resource.data.usuarioId == request.auth.uid)
+        );
+
+      allow delete: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
     }
 
     match /origensVenda/{origemId} {
       allow read: if isSignedIn();
-      allow write: if isClientAdmin();
+      allow create: if isClientAdmin() && validOrigemCreate();
+      allow update: if isClientAdmin() && validOrigemUpdate();
+      allow delete: if isClientAdmin();
     }
 
     match /{document=**} {

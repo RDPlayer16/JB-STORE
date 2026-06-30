@@ -46,11 +46,18 @@ export default function Login() {
   };
 
   const bloqueado = enviando || loading;
+  const logoUrl = `${import.meta.env.BASE_URL}maskable_icon.png`;
 
   return (
     <main className="login-page">
       <section className="login-card" aria-labelledby="login-title">
-        <h1 id="login-title">Area de Login</h1>
+        <div className="login-brand">
+          <img src={logoUrl} alt="JBM" />
+          <div>
+            <span className="eyebrow">Dashboard JBM</span>
+            <h1 id="login-title">Area de Login</h1>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           <label className="form-field">
