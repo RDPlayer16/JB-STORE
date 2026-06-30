@@ -28,7 +28,7 @@ function traduzirErro(error) {
   const mensagensErro = {
     "auth/email-already-in-use": "Este email ja esta cadastrado.",
     "auth/invalid-email": "Email invalido.",
-    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+    "auth/weak-password": "A senha precisa ter pelo menos 8 caracteres.",
     "permission-denied": "Sem permissao para gerenciar usuarios. Confira as regras do Firestore.",
   };
 
@@ -314,8 +314,8 @@ export default function UsuariosAdmin() {
                 name="senha"
                 value={form.senha}
                 onChange={handleChange}
-                placeholder="Minimo 6 caracteres"
-                minLength={6}
+                placeholder="Minimo 8 caracteres"
+                minLength={8}
                 autoComplete="new-password"
                 required
               />

@@ -18,7 +18,12 @@ export default defineConfig({
         background_color: '#0a0a0a',
         display: 'standalone',
         icons: [
-          
+          {
+            src: 'maskable_icon.png',
+            sizes: '525x525',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
         ]
       }
     })

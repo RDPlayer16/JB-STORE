@@ -8,7 +8,9 @@ const formatarMoeda = (valor) => new Intl.NumberFormat('pt-BR', {
 }).format(valor || 0);
 
 function formatarData(dataCadastro) {
-  return dataCadastro ? new Date(dataCadastro).toLocaleDateString('pt-BR') : 'N/A';
+  const millis = dataCadastro?.toMillis?.() || (dataCadastro ? Date.parse(dataCadastro) : 0);
+
+  return millis ? new Date(millis).toLocaleDateString('pt-BR') : 'N/A';
 }
 
 export function ListaClientes({ clientes, loadingClientes }) {
