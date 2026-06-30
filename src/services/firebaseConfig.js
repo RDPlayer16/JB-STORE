@@ -2,38 +2,22 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-const requiredEnvKeys = [
-  "VITE_FIREBASE_API_KEY",
-  "VITE_FIREBASE_AUTH_DOMAIN",
-  "VITE_FIREBASE_PROJECT_ID",
-  "VITE_FIREBASE_STORAGE_BUCKET",
-  "VITE_FIREBASE_MESSAGING_SENDER_ID",
-  "VITE_FIREBASE_APP_ID",
-];
+// Credenciais explicitas (Bypass do Vite .env)
+const firebaseConfig = {
+  apiKey: "AIzaSyAunB95d4h98NM8Q8Zt2XwfyCkWLeqs1RU",
+  authDomain: "jbstore-b8bb7.firebaseapp.com",
+  projectId: "jbstore-b8bb7",
+  storageBucket: "jbstore-b8bb7.firebasestorage.app",
+  messagingSenderId: "161004891665",
+  appId: "1:161004891665:web:71b929617afda8fc0fcbb0",
+  measurementId: "G-GP43L050H7",
+};
 
-const missingEnvKeys = requiredEnvKeys.filter((key) => !import.meta.env[key]);
-
-if (missingEnvKeys.length > 0) {
-  throw new Error(
-    "Configuracao do Firebase incompleta. Variaveis ausentes: " + missingEnvKeys.join(", "),
-  );
-}
-
-const firebaseConfig = Object.freeze({
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-});
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export { app };
+export { app, firebaseConfig };
 
 export function getSecondaryAuth() {
   const secondaryApp = getApps().some((firebaseApp) => firebaseApp.name === "secondary")

@@ -1,37 +1,26 @@
 // src/services/funcoesDB.js
-import { addDoc, collection, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
-
-function limparTexto(valor, limite = 120) {
-  return String(valor || "").trim().replace(/s+/g, " ").slice(0, limite);
-}
 
 export async function cadastrarClienteFirestore(dadosCliente, usuario) {
   if (!usuario?.uid) {
     throw new Error("Usuario logado nao encontrado.");
   }
 
-  const nome = limparTexto(dadosCliente.nome);
-  const origem = limparTexto(dadosCliente.origem, 80);
-  const valorVenda = Number(dadosCliente.valorVenda);
+  const valorVenda = parseFloat(dadosCliente.valorVenda) || 0;
   const adminDonoId = usuario.adminDonoId || "";
-
-  if (!nome || !origem || !Number.isFinite(valorVenda) || valorVenda < 0) {
-    throw new Error("Dados do cliente invalidos.");
-  }
 
   try {
     await addDoc(collection(db, "clientes"), {
-      nome,
-      origem,
+      ...dadosCliente,
       valorVenda,
       usuarioId: usuario.uid,
-      usuarioNome: limparTexto(usuario.nome || usuario.email),
-      usuarioEmail: usuario.email || "",
+      usuarioNome: usuario.nome || usuario.email,
+      usuarioEmail: usuario.email,
       adminDonoId,
-      adminDonoNome: limparTexto(usuario.adminDonoNome),
+      adminDonoNome: usuario.adminDonoNome || "",
       adminDonoEmail: usuario.adminDonoEmail || "",
-      dataCadastro: serverTimestamp(),
+      dataCadastro: new Date().toISOString(),
     });
 
     return true;
