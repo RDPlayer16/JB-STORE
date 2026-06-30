@@ -133,7 +133,7 @@ export function DashboardCards({
       legend: { display: false },
       tooltip: { enabled: false },
       datalabels: {
-        color: 'var(--gold-primary)',
+        color: '#D4AF37',
         font: { weight: 'bold', size: 12 },
         align: 'top',
         anchor: 'end',

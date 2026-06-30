@@ -45,6 +45,13 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+a,
+button,
+input,
+select {
+  min-width: 0;
+}
+
 .page-shell {
   display: flex;
   flex-direction: column;
@@ -71,6 +78,10 @@ button {
   display: flex;
   gap: 16px;
   justify-content: space-between;
+  min-width: 0;
+}
+
+.page-header > div {
   min-width: 0;
 }
 
@@ -180,8 +191,10 @@ button {
   font-weight: 700;
   justify-content: center;
   min-height: 46px;
+  text-align: center;
   padding: 12px 18px;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  white-space: normal;
 }
 
 .primary-button {
@@ -421,6 +434,10 @@ button {
   overflow-wrap: anywhere;
 }
 
+.data-table td:last-child {
+  white-space: nowrap;
+}
+
 .table-subtext {
   color: var(--text-secondary);
   display: block;
@@ -448,7 +465,9 @@ button {
   font-weight: 700;
   min-height: 44px;
   padding: 10px 12px;
+  text-align: center;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  white-space: normal;
 }
 
 .app-tab-button.active,
@@ -614,6 +633,26 @@ button {
   padding: 12px;
 }
 
+.origin-item strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.origin-item .danger-button {
+  flex-shrink: 0;
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.danger-button:focus-visible,
+.app-tab-button:focus-visible,
+.profile-select-button:focus-visible,
+.form-field input:focus-visible,
+.form-field select:focus-visible {
+  outline: 2px solid var(--gold-hover);
+  outline-offset: 2px;
+}
+
 @media (max-width: 1024px) {
   .dashboard-container,
   .usuarios-grid,
@@ -686,6 +725,7 @@ button {
   }
 
   .table-wrapper {
+    border: 0;
     overflow: visible;
   }
 
@@ -721,6 +761,7 @@ button {
     gap: 12px;
     grid-template-columns: minmax(100px, 38%) minmax(0, 1fr);
     padding: 8px 0;
+    white-space: normal;
   }
 
   .data-table td::before {
@@ -729,6 +770,10 @@ button {
     font-size: 0.78rem;
     font-weight: 700;
     text-transform: uppercase;
+  }
+
+  .data-table td:last-child {
+    align-items: center;
   }
 }
 
