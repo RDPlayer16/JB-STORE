@@ -54,8 +54,10 @@ export function ListaClientes({ clientes, loadingClientes }) {
             <thead>
               <tr>
                 <th>Nome</th>
+                <th>Objeto</th>
                 <th>Origem</th>
                 <th>Valor</th>
+                <th>Desconto</th>
                 <th>Data</th>
                 {modoDev && <th>Acao</th>}
               </tr>
@@ -64,8 +66,15 @@ export function ListaClientes({ clientes, loadingClientes }) {
               {clientes.map((cliente) => (
                 <tr key={cliente.id}>
                   <td data-label="Nome">{cliente.nome}</td>
+                  <td data-label="Objeto">{cliente.produto || 'Nao informado'}</td>
                   <td data-label="Origem" className="highlight-cell">{cliente.origem}</td>
-                  <td data-label="Valor" className="success-cell">{formatarMoeda(cliente.valorVenda)}</td>
+                  <td data-label="Valor" className="success-cell">
+                    {formatarMoeda(cliente.valorVenda)}
+                    {cliente.valorOriginal > 0 && (
+                      <span className="table-subtext">Original: {formatarMoeda(cliente.valorOriginal)}</span>
+                    )}
+                  </td>
+                  <td data-label="Desconto">{formatarMoeda(cliente.desconto)}</td>
                   <td data-label="Data">{formatarData(cliente.dataCadastro)}</td>
                   {modoDev && (
                     <td data-label="Acao">

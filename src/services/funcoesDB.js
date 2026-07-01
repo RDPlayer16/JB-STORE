@@ -3,7 +3,12 @@ import { addDoc, collection, deleteDoc, doc, serverTimestamp } from "firebase/fi
 import { db } from "./firebaseConfig";
 
 function limparTexto(valor, limite = 120) {
-  return String(valor || "").trim().replace(/s+/g, " ").slice(0, limite);
+  return String(valor || "").trim().replace(/\s+/g, " ").slice(0, limite);
+}
+
+function converterNumero(valor) {
+  const numero = Number.parseFloat(valor);
+  return Number.isFinite(numero) ? numero : 0;
 }
 
 export async function cadastrarClienteFirestore(dadosCliente, usuario) {
@@ -13,7 +18,10 @@ export async function cadastrarClienteFirestore(dadosCliente, usuario) {
 
   const nome = limparTexto(dadosCliente.nome);
   const origem = limparTexto(dadosCliente.origem, 80);
-  const valorVenda = Number(dadosCliente.valorVenda);
+  const valorVenda = converterNumero(dadosCliente.valorVenda);
+  const desconto = converterNumero(dadosCliente.desconto);
+  const valorOriginal = converterNumero(dadosCliente.valorOriginal) || valorVenda + desconto;
+  const produto = limparTexto(dadosCliente.produto, 180);
   const adminDonoId = usuario.adminDonoId || "";
 
   if (!nome || !origem || !Number.isFinite(valorVenda) || valorVenda < 0) {
@@ -24,6 +32,9 @@ export async function cadastrarClienteFirestore(dadosCliente, usuario) {
     await addDoc(collection(db, "clientes"), {
       nome,
       origem,
+      produto,
+      valorOriginal,
+      desconto,
       valorVenda,
       usuarioId: usuario.uid,
       usuarioNome: limparTexto(usuario.nome || usuario.email),
