@@ -43,6 +43,10 @@ service cloud.firestore {
       return value is string && value.size() > 0 && value.size() <= maxSize;
     }
 
+    function validOptionalText(value, maxSize) {
+      return value is string && value.size() <= maxSize;
+    }
+
     function validEmail(value) {
       return value is string && value.size() >= 5 && value.size() <= 254;
     }
@@ -84,11 +88,17 @@ service cloud.firestore {
 
     function validClienteCreate() {
       return request.resource.data.keys().hasOnly([
-          "nome", "origem", "valorVenda", "usuarioId", "usuarioNome", "usuarioEmail",
-          "adminDonoId", "adminDonoNome", "adminDonoEmail", "dataCadastro"
+          "nome", "origem", "produto", "valorOriginal", "desconto", "valorVenda",
+          "usuarioId", "usuarioNome", "usuarioEmail", "adminDonoId", "adminDonoNome",
+          "adminDonoEmail", "dataCadastro"
         ])
         && validText(request.resource.data.nome, 120)
         && validText(request.resource.data.origem, 80)
+        && validOptionalText(request.resource.data.produto, 180)
+        && request.resource.data.valorOriginal is number
+        && request.resource.data.valorOriginal >= 0
+        && request.resource.data.desconto is number
+        && request.resource.data.desconto >= 0
         && request.resource.data.valorVenda is number
         && request.resource.data.valorVenda >= 0
         && request.resource.data.usuarioId == request.auth.uid
@@ -99,9 +109,14 @@ service cloud.firestore {
 
     function validClienteUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(["nome", "origem", "valorVenda", "atualizadoEm"])
+        .hasOnly(["nome", "origem", "produto", "valorOriginal", "desconto", "valorVenda", "atualizadoEm"])
         && validText(request.resource.data.nome, 120)
         && validText(request.resource.data.origem, 80)
+        && validOptionalText(request.resource.data.produto, 180)
+        && request.resource.data.valorOriginal is number
+        && request.resource.data.valorOriginal >= 0
+        && request.resource.data.desconto is number
+        && request.resource.data.desconto >= 0
         && request.resource.data.valorVenda is number
         && request.resource.data.valorVenda >= 0;
     }
