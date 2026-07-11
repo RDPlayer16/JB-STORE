@@ -46,7 +46,7 @@ export default function Login() {
   };
 
   const bloqueado = enviando || loading;
-  const logoUrl = `${import.meta.env.BASE_URL}maskable_icon.png`;
+  const logoUrl = `${import.meta.env.BASE_URL}maskable_icon_x128.png`;
 
   return (
     <main className="login-page">
@@ -54,8 +54,8 @@ export default function Login() {
         <div className="login-brand">
           <img src={logoUrl} alt="JBM" />
           <div>
-            <span className="eyebrow">Dashboard JBM</span>
-            <h1 id="login-title">Area de Login</h1>
+            <span className="eyebrow">Bem-Vindo ao Metrics</span>
+            <h1 id="login-title">Àrea de Login</h1>
           </div>
         </div>
 

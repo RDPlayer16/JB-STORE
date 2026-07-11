@@ -11,3 +11,4 @@ Alteracoes combinadas neste pacote
 - Ajustes visuais e responsivos do painel, formularios, tabelas e modal da camera.
 - Build de producao atualizado na pasta dist.
 - Modelo recibo.pdf incluido para referencia/testes.
+- Alteração do loyout da pagina e app

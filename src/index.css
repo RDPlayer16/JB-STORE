@@ -5,8 +5,8 @@
   --border-color: #2a2a2a;
   --text-primary: #ffffff;
   --text-secondary: #a0a0a0;
-  --gold-primary: #D4AF37;
-  --gold-hover: #F3E5AB;
+  --gold-primary: #2172a8;
+  --gold-hover: #ebe9e5;
   --success: #4CAF50;
   --danger-bg: #3a0000;
   --danger-border: #ff4444;
@@ -271,9 +271,9 @@ select {
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+  box-shadow: 0 0 0 4px rgba(35, 107, 173, 0.12);
   transform: translateY(-1px);
-  background-color: #29220c;
+  background-color: #193e5759;
 }
 
 .primary-button,
@@ -972,7 +972,7 @@ body::before {
 
 .login-card {
   background: linear-gradient(180deg, rgba(20, 20, 20, 0.94), rgba(9, 9, 9, 0.96));
-  border-color: rgba(212, 175, 55, 0.32);
+  border-color: rgba(18, 28, 167, 0.959);
 }
 
 .login-brand {
