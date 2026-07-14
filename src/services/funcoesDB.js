@@ -3,32 +3,14 @@ import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "
 import { db } from "./firebaseConfig";
 import { normalizarVendaFirestore, ORIGEM_CADASTRO } from "../utils/vendaAutomatica";
 
-function montarClienteCompativelRegrasAtuais(venda) {
-  return {
-    nome: venda.nome,
-    origem: venda.origem,
-    produto: venda.produto,
-    valorOriginal: venda.valorOriginal,
-    desconto: venda.desconto,
-    valorVenda: venda.valorVenda,
-    usuarioId: venda.usuarioId,
-    usuarioNome: venda.usuarioNome,
-    usuarioEmail: venda.usuarioEmail,
-    adminDonoId: venda.adminDonoId,
-    adminDonoNome: venda.adminDonoNome,
-    adminDonoEmail: venda.adminDonoEmail,
-  };
-}
-
 export async function cadastrarClienteFirestore(dadosCliente, usuario) {
   try {
     const venda = normalizarVendaFirestore(dadosCliente, usuario, {
       origemCadastro: dadosCliente.origemCadastro || ORIGEM_CADASTRO.MANUAL,
     });
-    const cliente = montarClienteCompativelRegrasAtuais(venda);
 
     const documento = await addDoc(collection(db, "clientes"), {
-      ...cliente,
+      ...venda,
       dataCadastro: serverTimestamp(),
     });
 
