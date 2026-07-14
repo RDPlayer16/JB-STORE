@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Dashboard Clientes',
+        name: 'Metrics',
         short_name: 'Metrics',
         theme_color: '#0a0a0a', 
         background_color: '#0a0a0a',

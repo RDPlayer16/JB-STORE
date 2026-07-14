@@ -13,6 +13,16 @@ function formatarData(dataCadastro) {
   return millis ? new Date(millis).toLocaleDateString('pt-BR') : 'N/A';
 }
 
+function rotuloOrigemCadastro(origemCadastro) {
+  const rotulos = {
+    agente_pasta: 'Agente de pasta',
+    scanner: 'Scanner',
+    manual: 'Manual',
+  };
+
+  return rotulos[origemCadastro] || '';
+}
+
 export function ListaClientes({ clientes, loadingClientes }) {
   const [modoDev, setModoDev] = useState(false);
 
@@ -67,7 +77,12 @@ export function ListaClientes({ clientes, loadingClientes }) {
                 <tr key={cliente.id}>
                   <td data-label="Nome">{cliente.nome}</td>
                   <td data-label="Objeto">{cliente.produto || 'Nao informado'}</td>
-                  <td data-label="Origem" className="highlight-cell">{cliente.origem}</td>
+                  <td data-label="Origem" className="highlight-cell">
+                    {cliente.origem}
+                    {rotuloOrigemCadastro(cliente.origemCadastro) && (
+                      <span className="table-subtext">{rotuloOrigemCadastro(cliente.origemCadastro)}</span>
+                    )}
+                  </td>
                   <td data-label="Valor" className="success-cell">
                     {formatarMoeda(cliente.valorVenda)}
                     {cliente.valorOriginal > 0 && (

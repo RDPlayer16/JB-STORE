@@ -6,21 +6,45 @@ import { useAuth } from "../hooks/useAuth";
 import { useClientes } from "../hooks/useClientes";
 import { useEstatisticas } from "../hooks/useEstatisticas";
 import { useOrigensVenda } from "../hooks/useOrigensVenda";
-import { cadastrarClienteFirestore } from "../services/funcoesDB";
+import { useRecibosPendentes } from "../hooks/useRecibosPendentes";
+import {
+  cadastrarClienteFirestore,
+  descartarReciboPendente,
+  marcarReciboPendenteCadastrado,
+} from "../services/funcoesDB";
 
 export default function FuncionariosDashboard() {
   const navigate = useNavigate();
   const { logout, usuario } = useAuth();
   const { clientes, loadingClientes } = useClientes();
   const { origensAtivas, loadingOrigens } = useOrigensVenda();
+  const {
+    recibosPendentes,
+    loadingRecibosPendentes,
+    erroRecibosPendentes,
+  } = useRecibosPendentes(usuario);
   const { estatisticas, loading } = useEstatisticas(clientes, loadingClientes);
 
   const lidarComCadastroReal = async (novoCliente) => {
     try {
-      await cadastrarClienteFirestore(novoCliente, usuario);
+      const clienteId = await cadastrarClienteFirestore(novoCliente, usuario);
+
+      if (novoCliente.reciboPendenteId) {
+        await marcarReciboPendenteCadastrado(novoCliente.reciboPendenteId, clienteId);
+      }
     } catch (erro) {
       console.error("Erro ao cadastrar cliente:", erro);
       alert("Erro ao registrar cliente. Verifique o console.");
+      throw erro;
+    }
+  };
+
+  const lidarComDescartarRecibo = async (reciboId) => {
+    try {
+      await descartarReciboPendente(reciboId);
+    } catch (erro) {
+      console.error("Erro ao descartar recibo:", erro);
+      alert("Erro ao descartar recibo pendente.");
     }
   };
 
@@ -58,6 +82,10 @@ export default function FuncionariosDashboard() {
           onSubmitMock={lidarComCadastroReal}
           origens={origensAtivas}
           loadingOrigens={loadingOrigens}
+          recibosPendentes={recibosPendentes}
+          loadingRecibosPendentes={loadingRecibosPendentes}
+          erroRecibosPendentes={erroRecibosPendentes}
+          onDescartarRecibo={lidarComDescartarRecibo}
         />
         <DashboardCards estatisticas={dadosSeguros} categorias={origensAtivas} />
       </div>

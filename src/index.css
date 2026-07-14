@@ -148,8 +148,8 @@ select {
 }
 
 .scan-note-box {
-  background: rgba(212, 175, 55, 0.08);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(33, 114, 168, 0.08);
+  border: 1px solid rgba(33, 114, 168, 0.25);
   border-radius: 8px;
   display: grid;
   gap: 10px;
@@ -160,6 +160,28 @@ select {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pending-receipt-box {
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(112, 214, 112, 0.28);
+  border-radius: 8px;
+  color: var(--text-primary);
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.pending-receipt-box strong {
+  color: #70d670;
+  font-size: 0.95rem;
+}
+
+.pending-receipt-box span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .hidden-file-input,
@@ -180,7 +202,7 @@ select {
 
 .camera-modal {
   background: linear-gradient(180deg, rgba(22, 22, 22, 0.98), rgba(14, 14, 14, 0.98));
-  border: 1px solid rgba(212, 175, 55, 0.24);
+  border: 1px solid rgba(33, 114, 168, 0.24);
   border-radius: 8px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
   display: grid;
@@ -231,7 +253,7 @@ select {
 }
 
 .camera-scan-outline {
-  border: 2px solid rgba(212, 175, 55, 0.82);
+  border: 2px solid rgba(33, 114, 168, 0.82);
   border-radius: 8px;
   inset: 7%;
   pointer-events: none;
@@ -568,8 +590,8 @@ select {
 
 .app-tab-button.active,
 .app-tab-button:hover {
-  background: rgba(212, 175, 55, 0.12);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(33, 114, 168, 0.12);
+  border-color: rgba(33, 114, 168, 0.5);
   color: var(--gold-hover);
 }
 
@@ -668,7 +690,7 @@ select {
 
 .profile-select-button.active,
 .profile-select-button:hover {
-  background: rgba(212, 175, 55, 0.12);
+  background: rgba(33, 114, 168, 0.12);
   border-color: var(--gold-primary);
   transform: translateY(-1px);
 }
@@ -922,13 +944,13 @@ html {
 
 body {
   background:
-    linear-gradient(135deg, rgba(212, 175, 55, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(33, 114, 168, 0.08), transparent 34%),
     linear-gradient(180deg, #070707 0%, #101114 46%, #060606 100%);
   line-height: 1.5;
 }
 
 body::before {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.16), rgba(75, 133, 196, 0.1), rgba(212, 175, 55, 0.08));
+  background: linear-gradient(90deg, rgba(33, 114, 168, 0.16), rgba(75, 133, 196, 0.1), rgba(33, 114, 168, 0.08));
   content: "";
   height: 4px;
   left: 0;
@@ -944,7 +966,7 @@ body::before {
 
 .page-header {
   background: rgba(18, 18, 18, 0.78);
-  border: 1px solid rgba(212, 175, 55, 0.18);
+  border: 1px solid rgba(33, 114, 168, 0.18);
   border-radius: 8px;
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
   padding: clamp(18px, 3vw, 28px);
@@ -984,7 +1006,7 @@ body::before {
 
 .login-brand img {
   background: #0b0b0b;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(33, 114, 168, 0.4);
   border-radius: 8px;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
   height: 68px;
@@ -1016,7 +1038,7 @@ body::before {
 }
 
 .primary-button {
-  box-shadow: 0 12px 24px rgba(212, 175, 55, 0.18);
+  box-shadow: 0 12px 24px rgba(33, 114, 168, 0.18);
 }
 
 .primary-button:hover {
@@ -1024,8 +1046,8 @@ body::before {
 }
 
 .secondary-button:hover {
-  background: rgba(212, 175, 55, 0.12);
-  border-color: rgba(212, 175, 55, 0.48);
+  background: rgba(33, 114, 168, 0.12);
+  border-color: rgba(33, 114, 168, 0.48);
 }
 
 .dashboard-container,
@@ -1088,7 +1110,7 @@ body::before {
 }
 
 .data-table tr:hover td {
-  background: rgba(212, 175, 55, 0.045);
+  background: rgba(33, 114, 168, 0.045);
 }
 
 .app-tabs {

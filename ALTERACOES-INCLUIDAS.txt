@@ -11,4 +11,13 @@ Alteracoes combinadas neste pacote
 - Ajustes visuais e responsivos do painel, formularios, tabelas e modal da camera.
 - Build de producao atualizado na pasta dist.
 - Modelo recibo.pdf incluido para referencia/testes.
-- Alteração do loyout da pagina e app
+- Visual do Metrics aplicado sobre a versao atual sem alterar as colecoes/regras do Firebase.
+- Agente local rastreador de pasta em scripts/recibos-agent.mjs.
+- Comando npm run agent:recibos para vigiar uma pasta de recibos.
+- Agente cria recibos pendentes para conferencia, sem contabilizar automaticamente.
+- Formulario do funcionario escuta pendencias e preenche os campos para revisao manual.
+- Modo de teste do agente com --dry-run e processamento unico com --once.
+- Normalizador unico de venda em src/utils/vendaAutomatica.js.
+- Parser puro compartilhado em src/utils/extrairDadosNota.js.
+- Campos de rastreio reciboHash, arquivoOrigem e origemCadastro para evitar duplicidade.
+- Documentacao do agente em AGENTE-RECIBOS.md e exemplo de configuracao em .env.agent.example.

@@ -1,9 +1,22 @@
 // src/components/FormCadastro.jsx
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CameraNotaScanner } from './CameraNotaScanner';
 import { lerNota } from '../utils/leitorNota';
+import { ORIGEM_CADASTRO } from '../utils/vendaAutomatica';
 
-export function FormCadastro({ onSubmitMock, origens = [], loadingOrigens = false }) {
+const valorParaCampo = (valor) => (
+  valor === undefined || valor === null || valor === '' ? '' : String(valor)
+);
+
+export function FormCadastro({
+  onSubmitMock,
+  origens = [],
+  loadingOrigens = false,
+  recibosPendentes = [],
+  loadingRecibosPendentes = false,
+  erroRecibosPendentes = '',
+  onDescartarRecibo,
+}) {
   const arquivoNotaRef = useRef(null);
   const [nome, setNome] = useState('');
   const [origem, setOrigem] = useState('');
@@ -11,11 +24,84 @@ export function FormCadastro({ onSubmitMock, origens = [], loadingOrigens = fals
   const [valorOriginal, setValorOriginal] = useState('');
   const [desconto, setDesconto] = useState('');
   const [valorVenda, setValorVenda] = useState('');
+  const [origemCadastro, setOrigemCadastro] = useState(ORIGEM_CADASTRO.MANUAL);
+  const [reciboPendenteId, setReciboPendenteId] = useState('');
+  const [reciboHash, setReciboHash] = useState('');
+  const [arquivoOrigem, setArquivoOrigem] = useState('');
   const [lendoNota, setLendoNota] = useState(false);
   const [cameraAberta, setCameraAberta] = useState(false);
   const [statusNota, setStatusNota] = useState('');
   const [erroNota, setErroNota] = useState('');
   const semOrigens = !loadingOrigens && origens.length === 0;
+  const primeiroReciboPendente = recibosPendentes[0];
+  const proximoReciboPendente = reciboPendenteId
+    ? recibosPendentes.find((recibo) => recibo.id !== reciboPendenteId)
+    : primeiroReciboPendente;
+  const formularioLivreParaRecibo = !reciboPendenteId
+    && !lendoNota
+    && !nome
+    && !produto
+    && !valorOriginal
+    && !desconto
+    && !valorVenda;
+
+  const preencherCampos = useCallback((dados, metadados = {}) => {
+    setNome(valorParaCampo(dados.nome));
+    setProduto(valorParaCampo(dados.produto));
+    setValorOriginal(valorParaCampo(dados.valorOriginal));
+    setDesconto(valorParaCampo(dados.desconto));
+    setValorVenda(valorParaCampo(dados.valorVenda));
+
+    setOrigemCadastro(metadados.origemCadastro || ORIGEM_CADASTRO.SCANNER);
+    setReciboPendenteId(metadados.reciboPendenteId || '');
+    setReciboHash(metadados.reciboHash || '');
+    setArquivoOrigem(metadados.arquivoOrigem || '');
+  }, []);
+
+  const preencherComPendente = useCallback((recibo) => {
+    if (!recibo) return;
+
+    preencherCampos(recibo, {
+      origemCadastro: ORIGEM_CADASTRO.AGENTE_PASTA,
+      reciboPendenteId: recibo.id,
+      reciboHash: recibo.reciboHash,
+      arquivoOrigem: recibo.arquivoOrigem,
+    });
+    setOrigem('');
+    setErroNota('');
+    setStatusNota(`Recibo da pasta carregado: ${recibo.arquivoOrigem || 'arquivo recebido'}. Confira e escolha a origem.`);
+  }, [preencherCampos]);
+
+  const limparFormulario = () => {
+    setNome('');
+    setOrigem('');
+    setProduto('');
+    setValorOriginal('');
+    setDesconto('');
+    setValorVenda('');
+    setOrigemCadastro(ORIGEM_CADASTRO.MANUAL);
+    setReciboPendenteId('');
+    setReciboHash('');
+    setArquivoOrigem('');
+    setStatusNota('');
+    setErroNota('');
+  };
+
+  const descartarReciboAtual = async () => {
+    if (!reciboPendenteId) return;
+
+    await onDescartarRecibo?.(reciboPendenteId);
+    limparFormulario();
+  };
+
+  useEffect(() => {
+    if (!formularioLivreParaRecibo || !primeiroReciboPendente) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => preencherComPendente(primeiroReciboPendente), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [formularioLivreParaRecibo, preencherComPendente, primeiroReciboPendente]);
 
   const preencherComNota = async (arquivo) => {
     if (!arquivo) return;
@@ -27,11 +113,7 @@ export function FormCadastro({ onSubmitMock, origens = [], loadingOrigens = fals
     try {
       const { dados } = await lerNota(arquivo, setStatusNota);
 
-      if (dados.nome) setNome(dados.nome);
-      if (dados.produto) setProduto(dados.produto);
-      if (dados.valorOriginal) setValorOriginal(dados.valorOriginal);
-      if (dados.desconto) setDesconto(dados.desconto);
-      if (dados.valorVenda) setValorVenda(dados.valorVenda);
+      preencherCampos(dados, { origemCadastro: ORIGEM_CADASTRO.SCANNER });
 
       setStatusNota('Nota preenchida. Confira os campos antes de cadastrar.');
     } catch (erro) {
@@ -46,7 +128,7 @@ export function FormCadastro({ onSubmitMock, origens = [], loadingOrigens = fals
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (semOrigens) {
@@ -59,23 +141,24 @@ export function FormCadastro({ onSubmitMock, origens = [], loadingOrigens = fals
       return;
     }
 
-    onSubmitMock({
-      nome: nome.trim(),
-      origem,
-      produto: produto.trim(),
-      valorOriginal: parseFloat(valorOriginal) || 0,
-      desconto: parseFloat(desconto) || 0,
-      valorVenda: parseFloat(valorVenda) || 0,
-    });
+    try {
+      await onSubmitMock({
+        nome: nome.trim(),
+        origem,
+        produto: produto.trim(),
+        valorOriginal: parseFloat(valorOriginal) || 0,
+        desconto: parseFloat(desconto) || 0,
+        valorVenda: parseFloat(valorVenda) || 0,
+        origemCadastro,
+        reciboPendenteId,
+        reciboHash,
+        arquivoOrigem,
+      });
 
-    setNome('');
-    setOrigem('');
-    setProduto('');
-    setValorOriginal('');
-    setDesconto('');
-    setValorVenda('');
-    setStatusNota('');
-    setErroNota('');
+      limparFormulario();
+    } catch {
+      setErroNota('Nao foi possivel cadastrar. Confira os campos e tente novamente.');
+    }
   };
 
   return (
@@ -114,6 +197,42 @@ export function FormCadastro({ onSubmitMock, origens = [], loadingOrigens = fals
           {statusNota && <p className="form-success">{statusNota}</p>}
           {erroNota && <p className="form-error">{erroNota}</p>}
         </div>
+
+        {(reciboPendenteId || proximoReciboPendente || loadingRecibosPendentes || erroRecibosPendentes) && (
+          <div className="pending-receipt-box">
+            {reciboPendenteId ? (
+              <>
+                <strong>Recibo aguardando confirmacao</strong>
+                <span>{arquivoOrigem || 'Arquivo importado pelo agente'}</span>
+                <button
+                  type="button"
+                  className="secondary-button compact-button"
+                  onClick={descartarReciboAtual}
+                >
+                  Descartar
+                </button>
+              </>
+            ) : proximoReciboPendente ? (
+              <>
+                <strong>Novo recibo detectado</strong>
+                <span>{proximoReciboPendente.arquivoOrigem || 'Arquivo importado pelo agente'}</span>
+                <button
+                  type="button"
+                  className="secondary-button compact-button"
+                  onClick={() => preencherComPendente(proximoReciboPendente)}
+                >
+                  Preencher
+                </button>
+              </>
+            ) : erroRecibosPendentes ? (
+              <p className="form-error">
+                Nao consegui buscar os recibos pendentes: {erroRecibosPendentes}
+              </p>
+            ) : (
+              <span className="muted-text">Verificando recibos da pasta...</span>
+            )}
+          </div>
+        )}
 
         <CameraNotaScanner
           aberto={cameraAberta}

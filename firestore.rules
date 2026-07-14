@@ -89,12 +89,15 @@ service cloud.firestore {
     function validClienteCreate() {
       return request.resource.data.keys().hasOnly([
           "nome", "origem", "produto", "valorOriginal", "desconto", "valorVenda",
-          "usuarioId", "usuarioNome", "usuarioEmail", "adminDonoId", "adminDonoNome",
-          "adminDonoEmail", "dataCadastro"
+          "origemCadastro", "reciboHash", "arquivoOrigem", "usuarioId", "usuarioNome",
+          "usuarioEmail", "adminDonoId", "adminDonoNome", "adminDonoEmail", "dataCadastro"
         ])
         && validText(request.resource.data.nome, 120)
         && validText(request.resource.data.origem, 80)
         && validOptionalText(request.resource.data.produto, 180)
+        && validOptionalText(request.resource.data.origemCadastro, 40)
+        && validOptionalText(request.resource.data.reciboHash, 128)
+        && validOptionalText(request.resource.data.arquivoOrigem, 240)
         && request.resource.data.valorOriginal is number
         && request.resource.data.valorOriginal >= 0
         && request.resource.data.desconto is number
@@ -109,16 +112,54 @@ service cloud.firestore {
 
     function validClienteUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(["nome", "origem", "produto", "valorOriginal", "desconto", "valorVenda", "atualizadoEm"])
+        .hasOnly([
+          "nome", "origem", "produto", "valorOriginal", "desconto", "valorVenda",
+          "origemCadastro", "reciboHash", "arquivoOrigem", "atualizadoEm"
+        ])
         && validText(request.resource.data.nome, 120)
         && validText(request.resource.data.origem, 80)
         && validOptionalText(request.resource.data.produto, 180)
+        && validOptionalText(request.resource.data.origemCadastro, 40)
+        && validOptionalText(request.resource.data.reciboHash, 128)
+        && validOptionalText(request.resource.data.arquivoOrigem, 240)
         && request.resource.data.valorOriginal is number
         && request.resource.data.valorOriginal >= 0
         && request.resource.data.desconto is number
         && request.resource.data.desconto >= 0
         && request.resource.data.valorVenda is number
         && request.resource.data.valorVenda >= 0;
+    }
+
+    function validReciboPendenteCreate() {
+      return request.resource.data.keys().hasOnly([
+          "nome", "produto", "valorOriginal", "desconto", "valorVenda", "origemCadastro",
+          "reciboHash", "arquivoOrigem", "status", "usuarioId", "usuarioNome", "usuarioEmail",
+          "adminDonoId", "adminDonoNome", "adminDonoEmail", "criadoEm"
+        ])
+        && validOptionalText(request.resource.data.nome, 120)
+        && validOptionalText(request.resource.data.produto, 180)
+        && request.resource.data.valorOriginal is number
+        && request.resource.data.valorOriginal >= 0
+        && request.resource.data.desconto is number
+        && request.resource.data.desconto >= 0
+        && request.resource.data.valorVenda is number
+        && request.resource.data.valorVenda >= 0
+        && validOptionalText(request.resource.data.origemCadastro, 40)
+        && validText(request.resource.data.reciboHash, 128)
+        && validOptionalText(request.resource.data.arquivoOrigem, 240)
+        && request.resource.data.status == "pendente"
+        && request.resource.data.usuarioId == request.auth.uid
+        && request.resource.data.usuarioEmail == request.auth.token.email
+        && request.resource.data.adminDonoId == userProfile().data.adminDonoId
+        && request.resource.data.criadoEm == request.time;
+    }
+
+    function validReciboPendenteUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(["status", "clienteId", "atualizadoEm"])
+        && request.resource.data.status in ["pendente", "cadastrado", "descartado"]
+        && validOptionalText(request.resource.data.clienteId, 80)
+        && request.resource.data.atualizadoEm == request.time;
     }
 
     function validOrigemCreate() {
@@ -169,6 +210,15 @@ service cloud.firestore {
 
       allow delete: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
+    }
+
+    match /recibosPendentes/{reciboId} {
+      allow read: if isSignedIn() && resource.data.usuarioId == request.auth.uid;
+      allow create: if isActiveUser() && validReciboPendenteCreate();
+      allow update: if isSignedIn()
+        && resource.data.usuarioId == request.auth.uid
+        && validReciboPendenteUpdate();
+      allow delete: if false;
     }
 
     match /origensVenda/{origemId} {

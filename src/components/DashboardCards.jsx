@@ -92,7 +92,7 @@ export function DashboardCards({
   const categoriasGrafico = montarCategorias(dados, categorias);
   const valoresClientes = categoriasGrafico.map((cat) => dados.origens?.[cat] || 0);
   const valoresFaturamento = categoriasGrafico.map((cat) => dados.faturamentoPorOrigem?.[cat] || 0);
-  const palette = ['#D4AF37', '#B8860B', '#FFD700', '#DAA520', '#70d670', '#4CAF50', '#80cbc4', '#90caf9'];
+  const palette = ['#2172a8', '#5aa9e6', '#ebe9e5', '#70d670', '#4CAF50', '#80cbc4', '#90caf9', '#7f8fa6'];
   const backgroundColors = categoriasGrafico.map((_, index) => palette[index % palette.length]);
   const totalClientesFormatado = dados.totalClientes > 0 ? dados.totalClientes : 1;
 
@@ -133,7 +133,7 @@ export function DashboardCards({
       legend: { display: false },
       tooltip: { enabled: false },
       datalabels: {
-        color: '#D4AF37',
+        color: '#5aa9e6',
         font: { weight: 'bold', size: 12 },
         align: 'top',
         anchor: 'end',

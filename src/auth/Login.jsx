@@ -52,10 +52,10 @@ export default function Login() {
     <main className="login-page">
       <section className="login-card" aria-labelledby="login-title">
         <div className="login-brand">
-          <img src={logoUrl} alt="JBM" />
+          <img src={logoUrl} alt="Metrics" />
           <div>
-            <span className="eyebrow">Bem-Vindo ao Metrics</span>
-            <h1 id="login-title">Àrea de Login</h1>
+            <span className="eyebrow">Bem-vindo ao Metrics</span>
+            <h1 id="login-title">Area de Login</h1>
           </div>
         </div>
 
