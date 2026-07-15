@@ -31,6 +31,12 @@ export function normalizarVendaFirestore(dadosVenda, usuario, opcoes = {}) {
   );
   const reciboHash = limparTexto(opcoes.reciboHash || dadosVenda.reciboHash, 128);
   const arquivoOrigem = limparTexto(opcoes.arquivoOrigem || dadosVenda.arquivoOrigem, 240);
+  const usuarioEhAdmin = usuario.tipo === "admin";
+  const adminDonoId = usuarioEhAdmin ? usuario.uid : usuario.adminDonoId || "";
+  const adminDonoNome = usuarioEhAdmin
+    ? limparTexto(usuario.nome || usuario.email)
+    : limparTexto(usuario.adminDonoNome);
+  const adminDonoEmail = usuarioEhAdmin ? usuario.email || "" : usuario.adminDonoEmail || "";
 
   if (!nome || !origem || !Number.isFinite(valorVenda) || valorVenda < 0) {
     throw new Error("Dados da venda invalidos.");
@@ -49,8 +55,8 @@ export function normalizarVendaFirestore(dadosVenda, usuario, opcoes = {}) {
     usuarioId: usuario.uid,
     usuarioNome: limparTexto(usuario.nome || usuario.email),
     usuarioEmail: usuario.email || "",
-    adminDonoId: usuario.adminDonoId || "",
-    adminDonoNome: limparTexto(usuario.adminDonoNome),
-    adminDonoEmail: usuario.adminDonoEmail || "",
+    adminDonoId,
+    adminDonoNome,
+    adminDonoEmail,
   };
 }

@@ -17,9 +17,5 @@ export default function PrivateRoute({ children }) {
     return <Navigate to="/" replace state={{ from: location }} />;
   }
 
-  if (usuario.tipo === "admin") {
-    return <Navigate to="/admin" replace />;
-  }
-
   return children;
 }

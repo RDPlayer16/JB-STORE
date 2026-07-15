@@ -30,6 +30,15 @@ service cloud.firestore {
       return isActiveAdmin() && !isGeneralAdmin();
     }
 
+    function requestAdminDonoMatchesUser() {
+      return (isActiveAdmin() && request.resource.data.adminDonoId == request.auth.uid)
+        || (
+          isActiveUser()
+          && userProfile().data.tipo == "funcionario"
+          && request.resource.data.adminDonoId == userProfile().data.adminDonoId
+        );
+    }
+
     function isOwnUser(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
@@ -37,6 +46,12 @@ service cloud.firestore {
     function isOwnEmployeeResource() {
       return resource.data.tipo == "funcionario"
         && resource.data.adminDonoId == request.auth.uid;
+    }
+
+    function isUserManagedByAdmin() {
+      return isGeneralAdmin()
+        || (isClientAdmin() && resource.data.tipo == "funcionario"
+          && resource.data.adminDonoId == request.auth.uid);
     }
 
     function validText(value, maxSize) {
@@ -86,6 +101,32 @@ service cloud.firestore {
         && request.resource.data.criadoEm == request.time;
     }
 
+    function validUserCreateRequest() {
+      return request.resource.data.keys().hasOnly([
+          "nome", "email", "tipo", "ativo", "adminGeral",
+          "criadoPorUid", "criadoPorNome", "criadoPorEmail",
+          "adminDonoId", "adminDonoNome", "adminDonoEmail", "criadoEm"
+        ])
+        && validText(request.resource.data.nome, 120)
+        && validEmail(request.resource.data.email)
+        && request.resource.data.tipo in ["admin", "funcionario"]
+        && request.resource.data.ativo == true
+        && request.resource.data.criadoPorUid == request.auth.uid
+        && request.resource.data.criadoEm == request.time
+        && (
+          (
+            isGeneralAdmin()
+            && request.resource.data.tipo == "admin"
+            && request.resource.data.adminGeral == false
+          )
+          || (
+            isActiveAdmin()
+            && request.resource.data.tipo == "funcionario"
+            && request.resource.data.adminDonoId == request.auth.uid
+          )
+        );
+    }
+
     function validClienteCreate() {
       return request.resource.data.keys().hasOnly([
           "nome", "origem", "produto", "valorOriginal", "desconto", "valorVenda",
@@ -106,7 +147,7 @@ service cloud.firestore {
         && request.resource.data.valorVenda >= 0
         && request.resource.data.usuarioId == request.auth.uid
         && request.resource.data.usuarioEmail == request.auth.token.email
-        && request.resource.data.adminDonoId == userProfile().data.adminDonoId
+        && requestAdminDonoMatchesUser()
         && request.resource.data.dataCadastro == request.time;
     }
 
@@ -150,7 +191,7 @@ service cloud.firestore {
         && request.resource.data.status == "pendente"
         && request.resource.data.usuarioId == request.auth.uid
         && request.resource.data.usuarioEmail == request.auth.token.email
-        && request.resource.data.adminDonoId == userProfile().data.adminDonoId
+        && requestAdminDonoMatchesUser()
         && request.resource.data.criadoEm == request.time;
     }
 
@@ -183,21 +224,24 @@ service cloud.firestore {
         || isGeneralAdmin()
         || (isClientAdmin() && isOwnEmployeeResource());
 
-      allow create: if (isGeneralAdmin() && isClientAdminRequest())
-        || (isClientAdmin() && isOwnEmployeeRequest());
+      allow create: if isActiveAdmin()
+        && (
+          validUserCreateRequest()
+          || (isGeneralAdmin() && isClientAdminRequest())
+          || (isClientAdmin() && isOwnEmployeeRequest())
+        );
 
       allow update: if !isOwnUser(userId)
         && validStatusUpdate()
-        && (
-          (isGeneralAdmin() && resource.data.adminGeral != true)
-          || (isClientAdmin() && isOwnEmployeeResource())
-        );
+        && isUserManagedByAdmin()
+        && resource.data.adminGeral != true;
 
       allow delete: if false;
     }
 
     match /clientes/{clienteId} {
-      allow read: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
+      allow read: if isGeneralAdmin()
+        || (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
 
       allow create: if isActiveUser() && validClienteCreate();
@@ -205,10 +249,11 @@ service cloud.firestore {
       allow update: if validClienteUpdate()
         && (
           (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
+          || (isGeneralAdmin() && resource.data.adminDonoId == request.auth.uid)
           || (isSignedIn() && resource.data.usuarioId == request.auth.uid)
         );
 
-      allow delete: if (isClientAdmin() && resource.data.adminDonoId == request.auth.uid)
+      allow delete: if (isActiveAdmin() && resource.data.adminDonoId == request.auth.uid)
         || (isSignedIn() && resource.data.usuarioId == request.auth.uid);
     }
 
@@ -223,9 +268,9 @@ service cloud.firestore {
 
     match /origensVenda/{origemId} {
       allow read: if isSignedIn();
-      allow create: if isClientAdmin() && validOrigemCreate();
-      allow update: if isClientAdmin() && validOrigemUpdate();
-      allow delete: if isClientAdmin();
+      allow create: if isActiveAdmin() && validOrigemCreate();
+      allow update: if isActiveAdmin() && validOrigemUpdate();
+      allow delete: if isActiveAdmin();
     }
 
     match /{document=**} {
