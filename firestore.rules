@@ -22,7 +22,9 @@ service cloud.firestore {
       return isActiveAdmin()
         && (
           userProfile().data.adminGeral == true
+          || !userProfile().data.keys().hasAny(["criadoPorUid"])
           || userProfile().data.criadoPorUid == null
+          || userProfile().data.criadoPorUid == ""
         );
     }
 
