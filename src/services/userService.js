@@ -130,7 +130,7 @@ export async function listarUsuarios(usuarioLogado) {
 
   const usuariosFiltrados = ehAdminGeral(usuarioLogado)
     ? usuarios.filter((usuario) => (
-      usuario.uid !== usuarioLogado.uid && !ehAdminGeral(usuario)
+      usuario.uid !== usuarioLogado.uid
     ))
     : usuarios.filter((usuario) => usuario.tipo === TIPO_FUNCIONARIO);
 
@@ -208,8 +208,8 @@ export async function atualizarStatusUsuario(uid, ativo, usuarioLogado) {
   const usuarioRef = doc(db, "usuarios", uid);
 
   if (ehAdminGeral(usuarioLogado)) {
-    if (usuarioAlvo.tipo !== TIPO_ADMIN || ehAdminGeral(usuarioAlvo)) {
-      throw new Error("O administrador geral altera apenas administradores clientes.");
+    if (usuarioAlvo.tipo !== TIPO_ADMIN) {
+      throw new Error("O administrador geral altera apenas administradores.");
     }
 
     const funcionariosSnapshot = await getDocs(

@@ -66,9 +66,9 @@ export default function UsuariosAdmin() {
   const [sucessoOrigem, setSucessoOrigem] = useState("");
   const [form, setForm] = useState(() => criarFormInicial());
 
-  const tituloLista = adminGeral ? "Administradores clientes" : "Funcionarios cadastrados";
+  const tituloLista = adminGeral ? "Administradores cadastrados" : "Funcionarios cadastrados";
   const textoLista = adminGeral
-    ? "Pausar uma assinatura tambem desativa os funcionarios vinculados a esse admin."
+    ? "Pausar um administrador tambem desativa os funcionarios vinculados a esse admin."
     : "Desativar bloqueia o acesso sem apagar o historico desse funcionario.";
 
   const carregarUsuarios = useCallback(async () => {

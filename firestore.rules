@@ -233,8 +233,7 @@ service cloud.firestore {
 
       allow update: if !isOwnUser(userId)
         && validStatusUpdate()
-        && isUserManagedByAdmin()
-        && resource.data.adminGeral != true;
+        && isUserManagedByAdmin();
 
       allow delete: if false;
     }

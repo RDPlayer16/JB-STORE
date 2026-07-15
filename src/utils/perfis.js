@@ -23,7 +23,7 @@ export function formatarTipoUsuario(usuarioOuTipo) {
   const tipo = typeof usuarioOuTipo === "string" ? usuarioOuTipo : usuarioOuTipo?.tipo;
 
   if (tipo === TIPO_ADMIN) {
-    return ehAdminGeral(usuarioOuTipo) ? "Administrador geral" : "Administrador cliente";
+    return usuarioOuTipo?.adminGeral === true ? "Administrador geral" : "Administrador cliente";
   }
 
   if (tipo === TIPO_FUNCIONARIO) {
